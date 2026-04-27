@@ -1,9 +1,31 @@
 'use client';
 
-import { useState, useTransition } from 'react';
+import { Suspense, useState, useTransition } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 
 export default function LoginPage() {
+  return (
+    <Suspense fallback={<LoginSkeleton />}>
+      <LoginForm />
+    </Suspense>
+  );
+}
+
+function LoginSkeleton() {
+  return (
+    <div className="max-w-sm mx-auto mt-12 border border-ink-200 rounded-xl p-6 bg-white">
+      <div className="h-6 w-40 bg-ink-100 rounded mb-2 animate-pulse" />
+      <div className="h-4 w-56 bg-ink-100 rounded mb-6 animate-pulse" />
+      <div className="space-y-4">
+        <div className="h-10 bg-ink-100 rounded animate-pulse" />
+        <div className="h-10 bg-ink-100 rounded animate-pulse" />
+        <div className="h-10 bg-ink-100 rounded animate-pulse" />
+      </div>
+    </div>
+  );
+}
+
+function LoginForm() {
   const router = useRouter();
   const params = useSearchParams();
   const [username, setUsername] = useState('');
