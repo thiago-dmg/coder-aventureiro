@@ -132,7 +132,11 @@ jobs:
             sudo npm ci
 
             echo "==> Aplicando schema no banco SQLite (sem perder dados)..."
-            sudo npx prisma db push --skip-generate
+            # Lemos o DATABASE_URL direto do shared/.env e injetamos só pra
+            # esse comando — o systemd só carrega EnvironmentFile pro serviço,
+            # não para os comandos avulsos do deploy script.
+            DB_URL=$(sudo grep -E '^DATABASE_URL=' $REMOTE_DIR/shared/.env | cut -d= -f2-)
+            sudo DATABASE_URL="$DB_URL" npx prisma db push --skip-generate
 
             echo "==> Atualizando symlink current..."
             sudo ln -sfn $RELEASE_DIR $REMOTE_DIR/current
