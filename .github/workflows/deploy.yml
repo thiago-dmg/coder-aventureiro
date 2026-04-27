@@ -1,0 +1,163 @@
+name: Deploy Code Aventureiro to VPS
+
+on:
+  push:
+    branches: ["main"]
+  workflow_dispatch:
+
+env:
+  SERVICE_NAME: coderaventureiro
+  REMOTE_DIR: /var/www/coder-aventureiro
+  APP_PORT: 3003
+  NODE_VERSION: 20.x
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+
+      - name: Install dependencies
+        # postinstall roda `prisma generate` automaticamente
+        run: npm ci
+        env:
+          DATABASE_URL: "file:./build.db"
+
+      - name: Build Next.js
+        env:
+          # NEXT_PUBLIC_* são embutidas no bundle no momento do build
+          NEXT_PUBLIC_SITE_URL: https://coderaventureiro.com.br
+          NEXT_PUBLIC_SITE_NAME: Code Aventureiro
+          # Placeholders só para o build não reclamar; os valores reais
+          # ficam no /var/www/coder-aventureiro/shared/.env na VPS.
+          DATABASE_URL: "file:./build.db"
+          AUTH_SECRET: "build-time-placeholder"
+          ADMIN_USERNAME: "admin"
+          ADMIN_PASSWORD_HASH: "build-time-placeholder"
+        run: npm run build
+
+      - name: Package artifact
+        # Não envia src/ nem node_modules. O `npm ci` na VPS reinstala tudo
+        # garantindo binários nativos compatíveis com o ambiente do servidor.
+        run: |
+          tar -czf coderaventureiro.tar.gz \
+            .next \
+            public \
+            prisma \
+            scripts \
+            package.json \
+            package-lock.json \
+            next.config.mjs \
+            tsconfig.json
+
+      - name: Prepare systemd service file
+        run: |
+          cat > coderaventureiro.service <<EOF
+          [Unit]
+          Description=Code Aventureiro (Next.js)
+          After=network.target
+
+          [Service]
+          Type=simple
+          WorkingDirectory=${{ env.REMOTE_DIR }}/current
+          ExecStart=/usr/bin/npm start
+          Restart=always
+          RestartSec=5
+          KillSignal=SIGINT
+          SyslogIdentifier=${{ env.SERVICE_NAME }}
+          Environment=NODE_ENV=production
+          Environment=PORT=${{ env.APP_PORT }}
+          Environment=HOSTNAME=127.0.0.1
+          EnvironmentFile=${{ env.REMOTE_DIR }}/shared/.env
+
+          [Install]
+          WantedBy=multi-user.target
+          EOF
+
+      - name: Upload package to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          source: "coderaventureiro.tar.gz,coderaventureiro.service"
+          target: "/tmp/deploy-${{ github.run_id }}"
+          overwrite: true
+
+      - name: Deploy on VPS
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.VPS_SSH_HOST }}
+          username: ${{ secrets.VPS_SSH_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: 22
+          script_stop: true
+          script: |
+            set -e
+
+            SERVICE_NAME="${{ env.SERVICE_NAME }}"
+            REMOTE_DIR="${{ env.REMOTE_DIR }}"
+            RUN_DIR="/tmp/deploy-${{ github.run_id }}"
+            TAR="$RUN_DIR/coderaventureiro.tar.gz"
+            COMMIT="${{ github.sha }}"
+
+            echo "==> Garantindo estrutura de pastas..."
+            sudo mkdir -p $REMOTE_DIR/releases
+            sudo mkdir -p $REMOTE_DIR/shared/prisma
+
+            RELEASE_DIR=$REMOTE_DIR/releases/$COMMIT
+            sudo rm -rf $RELEASE_DIR
+            sudo mkdir -p $RELEASE_DIR
+
+            echo "==> Extraindo nova versão..."
+            sudo tar -xzf $TAR -C $RELEASE_DIR
+
+            echo "==> Linkando .env do shared/..."
+            sudo ln -sfn $REMOTE_DIR/shared/.env $RELEASE_DIR/.env
+
+            echo "==> Instalando dependências e gerando Prisma client..."
+            cd $RELEASE_DIR
+            sudo npm ci
+
+            echo "==> Aplicando schema no banco SQLite (sem perder dados)..."
+            sudo npx prisma db push --skip-generate
+
+            echo "==> Atualizando symlink current..."
+            sudo ln -sfn $RELEASE_DIR $REMOTE_DIR/current
+
+            echo "==> Atualizando service do systemd..."
+            sudo cp $RUN_DIR/coderaventureiro.service /etc/systemd/system/$SERVICE_NAME.service
+
+            sudo systemctl daemon-reload
+            sudo systemctl enable $SERVICE_NAME
+            sudo systemctl restart $SERVICE_NAME
+
+            echo "==> Limpando releases antigos (mantém os 3 mais recentes)..."
+            cd $REMOTE_DIR/releases
+            ls -t | tail -n +4 | xargs -r sudo rm -rf
+
+            echo "==> Limpando artefatos temporários..."
+            rm -rf $RUN_DIR
+
+            echo "==> Status do serviço:"
+            sudo systemctl status $SERVICE_NAME --no-pager || true
+
+            echo "==> Health check (porta ${{ env.APP_PORT }})..."
+            sleep 4
+            if curl -fsS http://127.0.0.1:${{ env.APP_PORT }}/ -o /dev/null; then
+              echo "✅ App respondendo OK"
+            else
+              echo "⚠️  Health check falhou — confira: journalctl -u $SERVICE_NAME -n 50"
+              exit 1
+            fi
+
+            echo "==> Deploy concluído"
