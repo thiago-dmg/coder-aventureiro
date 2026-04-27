@@ -1,0 +1,47 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* highlight.js — tema GitHub para os blocos de código */
+@import 'highlight.js/styles/github-dark.css';
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  body {
+    @apply bg-white text-ink-900;
+  }
+}
+
+/* Tipografia do conteúdo do post (markdown renderizado) */
+@layer components {
+  .prose-post {
+    @apply text-ink-900 leading-relaxed;
+  }
+  .prose-post h1 { @apply text-3xl font-bold mt-8 mb-4; }
+  .prose-post h2 { @apply text-2xl font-semibold mt-8 mb-3; }
+  .prose-post h3 { @apply text-xl font-semibold mt-6 mb-2; }
+  .prose-post p  { @apply my-4; }
+  .prose-post ul { @apply list-disc pl-6 my-4 space-y-1; }
+  .prose-post ol { @apply list-decimal pl-6 my-4 space-y-1; }
+  .prose-post a  { @apply text-accent underline underline-offset-2 hover:text-accent-dark; }
+  .prose-post blockquote {
+    @apply border-l-4 border-ink-200 pl-4 italic text-ink-700 my-4;
+  }
+  .prose-post pre {
+    @apply rounded-lg bg-ink-900 text-ink-100 p-4 overflow-x-auto my-4 text-sm;
+  }
+  .prose-post code:not(pre code) {
+    @apply bg-ink-100 text-accent px-1.5 py-0.5 rounded text-sm font-mono;
+  }
+  .prose-post pre code { @apply bg-transparent p-0 text-ink-100; }
+  .prose-post img { @apply rounded-lg my-6; }
+  .prose-post hr  { @apply my-8 border-ink-200; }
+  .prose-post table { @apply w-full text-sm my-4 border-collapse; }
+  .prose-post th, .prose-post td {
+    @apply border border-ink-200 px-3 py-2 text-left;
+  }
+  .prose-post th { @apply bg-ink-50 font-semibold; }
+}

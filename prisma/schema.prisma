@@ -1,0 +1,62 @@
+// Schema do Prisma — banco SQLite local.
+// Para mudar pro Postgres em produção: trocar provider para "postgresql"
+// e ajustar DATABASE_URL no .env.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Post {
+  id          Int      @id @default(autoincrement())
+  title       String
+  slug        String   @unique
+  summary     String
+  content     String   // markdown puro
+  coverImage  String?  // URL da imagem de capa (opcional)
+  tags        String   @default("") // CSV simples: "angular,rxjs,signals"
+  published   Boolean  @default(false)
+  publishedAt DateTime?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  likes    Like[]
+  comments Comment[]
+
+  @@index([published, publishedAt])
+  @@index([slug])
+}
+
+// Cada like é único por (post, fingerprint).
+// fingerprint = hash(IP + user-agent) — detalhe na lib/fingerprint.ts.
+model Like {
+  id          Int      @id @default(autoincrement())
+  postId      Int
+  post        Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  fingerprint String
+  createdAt   DateTime @default(now())
+
+  @@unique([postId, fingerprint])
+  @@index([postId])
+}
+
+// Comentário público.
+// `ipHash` é guardado pra rate limit, não é exibido em lugar nenhum.
+// Conteúdo é renderizado como texto puro pelo React (sem dangerouslySetInnerHTML),
+// então XSS não rola.
+model Comment {
+  id        Int      @id @default(autoincrement())
+  postId    Int
+  post      Post     @relation(fields: [postId], references: [id], onDelete: Cascade)
+  author    String   // nome livre, max 50 chars (validado no server)
+  content   String   // max 2000 chars (validado no server)
+  ipHash    String   // hash do IP — só pra rate limit
+  createdAt DateTime @default(now())
+
+  @@index([postId, createdAt])
+  @@index([ipHash, createdAt])
+}
