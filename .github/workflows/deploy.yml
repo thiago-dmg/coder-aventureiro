@@ -121,8 +121,11 @@ jobs:
             echo "==> Extraindo nova versão..."
             sudo tar -xzf $TAR -C $RELEASE_DIR
 
-            echo "==> Linkando .env do shared/..."
-            sudo ln -sfn $REMOTE_DIR/shared/.env $RELEASE_DIR/.env
+            # NÃO criamos symlink .env aqui:
+            # o systemd já injeta as variáveis via EnvironmentFile=shared/.env.
+            # Se o Next.js encontrar um .env no diretório, o @next/env
+            # (dotenv-expand) interpreta os "$" do hash bcrypt como referência
+            # de variável e corrompe ADMIN_PASSWORD_HASH em runtime.
 
             echo "==> Instalando dependências e gerando Prisma client..."
             cd $RELEASE_DIR
