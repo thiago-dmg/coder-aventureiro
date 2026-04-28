@@ -138,6 +138,9 @@ jobs:
             DB_URL=$(sudo grep -E '^DATABASE_URL=' $REMOTE_DIR/shared/.env | cut -d= -f2-)
             sudo DATABASE_URL="$DB_URL" npx prisma db push --skip-generate
 
+            echo "==> Rodando seed (idempotente via upsert por slug)..."
+            sudo DATABASE_URL="$DB_URL" npm run db:seed || echo "Seed falhou — sigo o deploy mesmo assim."
+
             echo "==> Atualizando symlink current..."
             sudo ln -sfn $RELEASE_DIR $REMOTE_DIR/current
 
