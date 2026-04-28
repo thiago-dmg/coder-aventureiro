@@ -88,3 +88,55 @@ export async function listAllPostsForAdmin() {
     orderBy: [{ updatedAt: 'desc' }],
   });
 }
+
+export type PagedPosts = {
+  items: PostListItem[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+};
+
+/**
+ * Versão paginada da listagem pública.
+ * O Prisma faz `take` e `skip` direto no SQL, evitando carregar tudo em memória.
+ */
+export async function listPublishedPostsPaged(opts: {
+  page: number;
+  perPage: number;
+}): Promise<PagedPosts> {
+  const perPage = Math.max(1, Math.min(50, opts.perPage));
+  const page = Math.max(1, opts.page);
+  const skip = (page - 1) * perPage;
+
+  const where = { published: true };
+
+  const [total, posts] = await Promise.all([
+    prisma.post.count({ where }),
+    prisma.post.findMany({
+      where,
+      orderBy: { publishedAt: 'desc' },
+      skip,
+      take: perPage,
+      select: {
+        id: true,
+        title: true,
+        slug: true,
+        summary: true,
+        coverImage: true,
+        tags: true,
+        publishedAt: true,
+      },
+    }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+  return {
+    items: posts.map(toListItem),
+    total,
+    page,
+    perPage,
+    totalPages,
+  };
+}

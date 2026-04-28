@@ -1,19 +1,39 @@
 import Link from 'next/link';
 import PostCard from '@/components/PostCard';
-import { listPublishedPosts, getAllTags } from '@/lib/posts';
+import Pagination from '@/components/Pagination';
+import { listPublishedPostsPaged, getAllTags } from '@/lib/posts';
 
 // Server Component: dados são buscados no servidor a cada request.
 // Para cachear, podemos usar revalidate. Por enquanto, sempre fresh.
 export const dynamic = 'force-dynamic';
 
-export default async function HomePage() {
-  const [posts, tags] = await Promise.all([listPublishedPosts(), getAllTags()]);
+const PER_PAGE = 10;
+
+// No Next 15, searchParams chega como Promise dentro de Server Components.
+type Props = {
+  searchParams: Promise<{ page?: string }>;
+};
+
+function parsePage(raw: string | undefined): number {
+  const n = Number(raw);
+  if (!Number.isFinite(n) || n < 1) return 1;
+  return Math.floor(n);
+}
+
+export default async function HomePage({ searchParams }: Props) {
+  const sp = await searchParams;
+  const page = parsePage(sp.page);
+
+  const [paged, tags] = await Promise.all([
+    listPublishedPostsPaged({ page, perPage: PER_PAGE }),
+    getAllTags(),
+  ]);
 
   return (
     <div>
       <section className="mb-10">
         <h1 className="text-4xl font-bold tracking-tight">
-          Code Aventureiro
+          Coder Aventureiro
         </h1>
         <p className="mt-3 text-ink-700 max-w-xl">
           Diário de bordo de um dev front-end. Projetos, bugs resolvidos,
@@ -39,13 +59,20 @@ export default async function HomePage() {
       )}
 
       <section className="grid gap-6 sm:grid-cols-2">
-        {posts.length === 0 && (
+        {paged.items.length === 0 && (
           <p className="text-ink-500">Nenhum post publicado ainda.</p>
         )}
-        {posts.map((p) => (
+        {paged.items.map((p) => (
           <PostCard key={p.id} post={p} />
         ))}
       </section>
+
+      <Pagination
+        page={paged.page}
+        totalPages={paged.totalPages}
+        total={paged.total}
+        basePath="/"
+      />
     </div>
   );
 }

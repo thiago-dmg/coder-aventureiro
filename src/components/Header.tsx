@@ -5,7 +5,7 @@ export default function Header() {
     <header className="border-b border-ink-200 bg-white">
       <div className="mx-auto max-w-4xl px-4 py-5 flex items-center justify-between">
         <Link href="/" className="text-xl font-bold tracking-tight">
-          <span className="text-accent">{'</>'}</span> Code Aventureiro
+          <span className="text-accent">{'</>'}</span> Coder Aventureiro
         </Link>
 
         <nav className="flex items-center gap-5 text-sm text-ink-700">

@@ -5,8 +5,8 @@ import Footer from '@/components/Footer';
 
 export const metadata: Metadata = {
   title: {
-    default: 'Code Aventureiro',
-    template: '%s · Code Aventureiro',
+    default: 'Coder Aventureiro',
+    template: '%s · Coder Aventureiro',
   },
   description: 'Blog pessoal de um dev front-end registrando projetos, bugs e estudos.',
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'),

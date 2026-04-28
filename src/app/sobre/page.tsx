@@ -5,7 +5,7 @@ export const metadata: Metadata = { title: 'Sobre' };
 export default function SobrePage() {
   return (
     <div className="prose-post max-w-2xl">
-      <h1>Sobre o Code Aventureiro</h1>
+      <h1>Sobre o Coder Aventureiro</h1>
 
       <p>
         Esse é o meu canto da internet onde eu registro tudo que aprendo
@@ -38,7 +38,7 @@ export default function SobrePage() {
 
       <h2>Contato</h2>
       <p>
-        Pode me achar como <em>@codeaventureiro</em> nas redes (ou edite essa
+        Pode me achar como <em>@coderaventureiro</em> nas redes (ou edite essa
         página com seus links reais).
       </p>
     </div>

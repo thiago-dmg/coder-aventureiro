@@ -58,7 +58,7 @@ export default async function PostPage({ params }: Props) {
       </header>
 
       {post.coverImage && (
-        <div className="relative aspect-[16/9] w-full mb-8 rounded-xl overflow-hidden bg-ink-100">
+        <div className="relative h-64 sm:h-80 md:h-96 w-full mb-8 rounded-xl overflow-hidden bg-ink-100">
           <Image
             src={post.coverImage}
             alt={post.title}

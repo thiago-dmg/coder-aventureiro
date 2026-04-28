@@ -16,12 +16,12 @@ export default function PostCard({ post }: { post: PostListItem }) {
   return (
     <article className="group border border-ink-200 rounded-xl overflow-hidden hover:border-accent/40 hover:shadow-md transition-all bg-white">
       {post.coverImage && (
-        <Link href={`/posts/${post.slug}`} className="block aspect-[16/9] relative bg-ink-100">
+        <Link href={`/posts/${post.slug}`} className="relative block h-48 w-full bg-ink-100 overflow-hidden">
           <Image
             src={post.coverImage}
             alt={post.title}
             fill
-            sizes="(max-width: 768px) 100vw, 700px"
+            sizes="(max-width: 640px) 100vw, 50vw"
             className="object-cover"
           />
         </Link>

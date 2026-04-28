@@ -1,4 +1,4 @@
-# Code Aventureiro
+# Coder Aventureiro
 
 Blog pessoal para registrar projetos, bugs resolvidos e estudos de front-end.
 Construído com **Next.js 15 (App Router)**, **TypeScript**, **Tailwind**, **Prisma** e **SQLite**.

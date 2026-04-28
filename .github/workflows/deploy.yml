@@ -1,4 +1,4 @@
-name: Deploy Code Aventureiro to VPS
+name: Deploy Coder Aventureiro to VPS
 
 on:
   push:
@@ -35,7 +35,7 @@ jobs:
         env:
           # NEXT_PUBLIC_* são embutidas no bundle no momento do build
           NEXT_PUBLIC_SITE_URL: https://coderaventureiro.com.br
-          NEXT_PUBLIC_SITE_NAME: Code Aventureiro
+          NEXT_PUBLIC_SITE_NAME: Coder Aventureiro
           # Placeholders só para o build não reclamar; os valores reais
           # ficam no /var/www/coder-aventureiro/shared/.env na VPS.
           DATABASE_URL: "file:./build.db"
@@ -62,7 +62,7 @@ jobs:
         run: |
           cat > coderaventureiro.service <<EOF
           [Unit]
-          Description=Code Aventureiro (Next.js)
+          Description=Coder Aventureiro (Next.js)
           After=network.target
 
           [Service]
