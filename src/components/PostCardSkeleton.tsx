@@ -5,7 +5,7 @@
 export default function PostCardSkeleton() {
   return (
     <article className="border border-ink-200 rounded-xl overflow-hidden bg-white">
-      <div className="h-48 w-full bg-ink-100 animate-pulse" />
+      <div className="w-full bg-ink-100 animate-pulse" style={{ height: "12rem" }} />
       <div className="p-5">
         <div className="flex gap-1 mb-3">
           <div className="h-5 w-14 bg-ink-100 rounded-full animate-pulse" />

@@ -16,7 +16,10 @@ export default function PostLoading() {
         <div className="mt-2 h-4 w-40 bg-ink-100 rounded animate-pulse" />
       </header>
 
-      <div className="relative h-64 sm:h-80 md:h-96 w-full mb-8 rounded-xl bg-ink-100 animate-pulse" />
+      <div
+        className="relative w-full mb-8 rounded-xl bg-ink-100 animate-pulse"
+        style={{ height: "clamp(16rem, 40vw, 24rem)" }}
+      />
 
       <div className="space-y-3">
         {Array.from({ length: 8 }).map((_, i) => (
