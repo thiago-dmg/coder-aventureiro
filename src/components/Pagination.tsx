@@ -12,6 +12,11 @@ type Props = {
    * Texto opcional pra mostrar abaixo (ex: "Página 2 de 3, 30 posts").
    */
   total?: number;
+  /**
+   * Parâmetros extras pra preservar na URL (ex: `?q=react`).
+   * Valores vazios/undefined são ignorados.
+   */
+  extraQuery?: Record<string, string | undefined>;
 };
 
 /**
@@ -19,7 +24,7 @@ type Props = {
  * Renderiza ‹ anterior | números das páginas | próximo ›
  * Páginas distantes da atual são colapsadas em "…" para não poluir a UI.
  */
-export default function Pagination({ page, totalPages, basePath, total }: Props) {
+export default function Pagination({ page, totalPages, basePath, total, extraQuery }: Props) {
   if (totalPages <= 1) return null;
 
   const prev = page > 1 ? page - 1 : null;
@@ -28,8 +33,15 @@ export default function Pagination({ page, totalPages, basePath, total }: Props)
   const pages = buildPagesWindow(page, totalPages);
 
   function href(p: number) {
-    if (p === 1) return basePath;
-    return `${basePath}?page=${p}`;
+    const params = new URLSearchParams();
+    if (p !== 1) params.set('page', String(p));
+    if (extraQuery) {
+      for (const [k, v] of Object.entries(extraQuery)) {
+        if (v != null && v !== '') params.set(k, v);
+      }
+    }
+    const qs = params.toString();
+    return qs ? `${basePath}?${qs}` : basePath;
   }
 
   return (

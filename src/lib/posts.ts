@@ -89,6 +89,61 @@ export async function listAllPostsForAdmin() {
   });
 }
 
+export type AdminPostRow = Awaited<ReturnType<typeof prisma.post.findMany>>[number];
+
+export type PagedAdminPosts = {
+  items: AdminPostRow[];
+  total: number;
+  page: number;
+  perPage: number;
+  totalPages: number;
+  q: string;
+};
+
+/**
+ * Versão paginada da listagem do admin, com busca opcional.
+ *
+ * `q` filtra por título, slug ou tags (CSV). Usa `contains` do Prisma
+ * que no SQLite vira LIKE — case-insensitive pra ASCII, que cobre
+ * 99% dos casos do blog (tags e slugs sempre lowercase ASCII).
+ *
+ * Inclui rascunhos (sem filtro `published`) — é o painel admin.
+ */
+export async function listAllPostsForAdminPaged(opts: {
+  page: number;
+  perPage: number;
+  q?: string;
+}): Promise<PagedAdminPosts> {
+  const perPage = Math.max(1, Math.min(50, opts.perPage));
+  const page = Math.max(1, opts.page);
+  const skip = (page - 1) * perPage;
+  const q = (opts.q ?? '').trim();
+
+  const where = q
+    ? {
+        OR: [
+          { title: { contains: q } },
+          { slug: { contains: q } },
+          { tags: { contains: q } },
+        ],
+      }
+    : {};
+
+  const [total, items] = await Promise.all([
+    prisma.post.count({ where }),
+    prisma.post.findMany({
+      where,
+      orderBy: [{ updatedAt: 'desc' }],
+      skip,
+      take: perPage,
+    }),
+  ]);
+
+  const totalPages = Math.max(1, Math.ceil(total / perPage));
+
+  return { items, total, page, perPage, totalPages, q };
+}
+
 export type PagedPosts = {
   items: PostListItem[];
   total: number;
