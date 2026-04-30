@@ -8,6 +8,17 @@ import { listPublishedPostsPaged, getAllTags } from '@/lib/posts';
 export const dynamic = 'force-dynamic';
 
 const PER_PAGE = 10;
+const MAX_TAGS = 12;
+
+/**
+ * Tags que sempre aparecem na seção "Tags populares", mesmo se tiverem
+ * pouco uso. Útil pra destacar categorias importantes (ex: "projetos")
+ * que não competem em volume com tags técnicas (ex: "angular", "devops").
+ *
+ * Ordem aqui é a ordem de exibição. As demais slots são preenchidas
+ * pelas tags mais usadas, até completar MAX_TAGS no total.
+ */
+const FEATURED_TAGS = ['projetos'];
 
 // No Next 15, searchParams chega como Promise dentro de Server Components.
 type Props = {
@@ -29,6 +40,16 @@ export default async function HomePage({ searchParams }: Props) {
     getAllTags(),
   ]);
 
+  // Lista exibida: tags fixas primeiro (na ordem de FEATURED_TAGS), depois
+  // as mais usadas que ainda não estão na lista, até completar MAX_TAGS.
+  // Tags fixas que não existem no banco são ignoradas silenciosamente.
+  const featured = FEATURED_TAGS
+    .map((name) => tags.find((t) => t.tag === name))
+    .filter((t): t is NonNullable<typeof t> => t != null);
+  const featuredNames = new Set(featured.map((t) => t.tag));
+  const rest = tags.filter((t) => !featuredNames.has(t.tag));
+  const displayedTags = [...featured, ...rest].slice(0, MAX_TAGS);
+
   return (
     <div>
       <section className="mb-10">
@@ -41,11 +62,11 @@ export default async function HomePage({ searchParams }: Props) {
         </p>
       </section>
 
-      {tags.length > 0 && (
+      {displayedTags.length > 0 && (
         <section className="mb-8">
           <h2 className="text-sm font-semibold text-ink-700 mb-2">Tags populares</h2>
           <div className="flex flex-wrap gap-2">
-            {tags.slice(0, 12).map(({ tag, count }) => (
+            {displayedTags.map(({ tag, count }) => (
               <Link
                 key={tag}
                 href={`/tags/${encodeURIComponent(tag)}`}
