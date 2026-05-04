@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import Pagination from '@/components/Pagination';
+import AdminPostActions from '@/components/AdminPostActions';
 import { listAllPostsForAdminPaged } from '@/lib/posts';
 
 export const dynamic = 'force-dynamic';
@@ -136,13 +137,8 @@ export default async function AdminDashboard({ searchParams }: Props) {
                     <td className="py-3 pr-4 hidden lg:table-cell text-ink-700">
                       {formatDate(p.publishedAt)}
                     </td>
-                    <td className="py-3 text-right">
-                      <Link
-                        href={`/admin/posts/${p.id}`}
-                        className="text-accent hover:underline"
-                      >
-                        Editar
-                      </Link>
+                    <td className="py-3">
+                      <AdminPostActions postId={p.id} />
                     </td>
                   </tr>
                 ))}

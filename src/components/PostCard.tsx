@@ -21,17 +21,12 @@ function formatDate(date: Date | null) {
 export default function PostCard({ post }: { post: PostListItem }) {
   return (
     <article className="group flex flex-col h-full border border-ink-200 rounded-xl overflow-hidden hover:border-accent/40 hover:shadow-md transition-all bg-white">
-      {/*
-        Imagem do card: altura fixa em 12rem (h-48).
-        - `relative` é exigido pelo next/image fill.
-        - `style={{ height }}` reforça caso o purge do Tailwind passe batido.
-      */}
-      <Link
-        href={`/posts/${post.slug}`}
-        className="relative block w-full bg-ink-100 overflow-hidden"
-        style={{ height: CARD_IMAGE_HEIGHT }}
-      >
-        {post.coverImage ? (
+      {post.coverImage ? (
+        <Link
+          href={`/posts/${post.slug}`}
+          className="relative block w-full bg-ink-100 overflow-hidden"
+          style={{ height: CARD_IMAGE_HEIGHT }}
+        >
           <Image
             src={post.coverImage}
             alt={post.title}
@@ -39,12 +34,8 @@ export default function PostCard({ post }: { post: PostListItem }) {
             sizes="(max-width: 640px) 100vw, 50vw"
             className="object-cover"
           />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center text-ink-300 text-3xl font-mono">
-            {'</>'}
-          </div>
-        )}
-      </Link>
+        </Link>
+      ) : null}
 
       <div className="p-5 flex flex-col flex-1">
         <div className="flex flex-wrap gap-1 mb-3">
